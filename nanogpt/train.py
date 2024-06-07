@@ -14,13 +14,14 @@ def make_arg_parser():
     parser.add_argument("--dataset", type=str, required=True)
     parser.add_argument("--split", type=float, default=0.9)
     parser.add_argument("--batch-size", type=int, default=32)
-    parser.add_argument("--block-size", type=int, default=16)
-    parser.add_argument("--embed-size", type=int, default=64)
-    parser.add_argument("--num-heads", type=int, default=6)
+    parser.add_argument("--block-size", type=int, default=48)
+    parser.add_argument("--embed-size", type=int, default=128)
+    parser.add_argument("--num-heads", type=int, default=8)
     parser.add_argument("--head-size", type=int, default=16)
-    parser.add_argument("--num-layers", type=int, default=4)
+    parser.add_argument("--num-layers", type=int, default=6)
     parser.add_argument("--dropout", type=float, default=0.2)
-    parser.add_argument("--steps", type=int, default=10_000)
+    parser.add_argument("--learning-rate", type=float, default=2e-4)
+    parser.add_argument("--steps", type=int, default=20_000)
     parser.add_argument("--eval-period", type=int, default=300)
     parser.add_argument("--eval-iters", type=int, default=200)
     parser.add_argument("--seed", type=int, default=None)
@@ -245,7 +246,7 @@ def main():
     )
     lm.to(device)
     print(f"Total model size: {sum(p.numel() for p in lm.parameters())}")
-    optimizer = torch.optim.AdamW(lm.parameters(), lr=1e-3)
+    optimizer = torch.optim.AdamW(lm.parameters(), lr=args.learning_rate)
 
     for i in range(args.steps):
         if i % args.eval_period == 0:
