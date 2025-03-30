@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Series RLC explorer</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <h1>Series RLC circuit explorer</h1>
+
+    <div class="container">
+      <div class="controls">
+        <h2>Circuit parameters</h2>
+
+        <div class="slider-container">
+          <label for="frequency"
+            >Supply frequency (1V)
+            <span id="frequency-value" class="slider-value">60</span> Hz</label
+          >
+          <input
+            type="range"
+            id="frequency"
+            min="1"
+            max="1000"
+            value="60"
+            step="1"
+          />
+        </div>
+
+        <div class="slider-container">
+          <label for="resistance"
+            >Resistance (R)
+            <span id="resistance-value" class="slider-value">100</span> Ω</label
+          >
+          <input
+            type="range"
+            id="resistance"
+            min="1"
+            max="1000"
+            value="100"
+            step="1"
+          />
+        </div>
+
+        <div class="slider-container">
+          <label for="inductance"
+            >Inductance (L)
+            <span id="inductance-value" class="slider-value">50</span> mH</label
+          >
+          <input
+            type="range"
+            id="inductance"
+            min="1"
+            max="1000"
+            value="50"
+            step="1"
+          />
+        </div>
+
+        <div class="slider-container">
+          <label for="capacitance"
+            >Capacitance (C)
+            <span id="capacitance-value" class="slider-value">100</span>
+            µF</label
+          >
+          <input
+            type="range"
+            id="capacitance"
+            min="1"
+            max="1000"
+            value="100"
+            step="1"
+          />
+        </div>
+      </div>
+
+      <div class="visualization">
+        <div class="chart-container">
+          <h2>Voltage waveforms</h2>
+          <canvas id="waveform-chart"></canvas>
+        </div>
+
+        <div class="chart-container">
+          <h2>Phasor diagram</h2>
+          <canvas id="phasor-chart"></canvas>
+        </div>
+
+        <div class="chart-container">
+          <h2>Frequency response</h2>
+          <canvas id="response-chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script type="module" src="sim.js"></script>
+    <script type="module" src="script.js"></script>
+  </body>
+</html>
