@@ -14,81 +14,81 @@
         <h2>Circuit parameters</h2>
 
         <div class="slider-container">
-          <label for="frequency"
-            >Supply frequency (1V)
-            <span id="frequency-value" class="slider-value">60</span> Hz</label
-          >
+          <label for="frequency">
+            Supply frequency (1V)
+            <span id="frequency-value" class="slider-value">100</span> MHz
+          </label>
           <input
             type="range"
             id="frequency"
-            min="1"
-            max="1000"
-            value="60"
-            step="1"
+            min="30"
+            max="3000"
+            value="100"
+            step="10"
           />
         </div>
-
         <div class="slider-container">
-          <label for="resistance"
-            >Resistance (R)
-            <span id="resistance-value" class="slider-value">100</span> Ω</label
-          >
+          <label for="resistance">
+            Resistance R (Ω)
+            <span id="resistance-value" class="slider-value">50</span> Ω
+          </label>
           <input
             type="range"
             id="resistance"
             min="1"
-            max="1000"
-            value="100"
+            max="100"
+            value="50"
             step="1"
           />
         </div>
-
         <div class="slider-container">
-          <label for="inductance"
-            >Inductance (L)
-            <span id="inductance-value" class="slider-value">50</span> mH</label
-          >
+          <label for="inductance">
+            Inductance L (nH)
+            <span id="inductance-value" class="slider-value">100</span> nH
+          </label>
           <input
             type="range"
             id="inductance"
             min="1"
             max="1000"
-            value="50"
+            value="100"
             step="1"
           />
         </div>
-
         <div class="slider-container">
-          <label for="capacitance"
-            >Capacitance (C)
-            <span id="capacitance-value" class="slider-value">100</span>
-            µF</label
-          >
+          <label for="capacitance">
+            Capacitance C (pF)
+            <span id="capacitance-value" class="slider-value">10</span> pF
+          </label>
           <input
             type="range"
             id="capacitance"
             min="1"
-            max="1000"
-            value="100"
+            max="100"
+            value="10"
             step="1"
           />
         </div>
       </div>
 
-      <div class="visualization">
-        <div class="chart-container">
-          <h2>Voltage waveforms</h2>
-          <canvas id="waveform-chart"></canvas>
+      <div class="waveform-container">
+        <h2>Voltage waveforms</h2>
+        <div>
+          <canvas id="waveform-chart" height="300px"></canvas>
         </div>
+      </div>
 
-        <div class="chart-container">
-          <h2>Phasor diagram</h2>
-          <canvas id="phasor-chart"></canvas>
+      <div class="phasor-container">
+        <h2>Phasor diagram</h2>
+        <div>
+          <canvas id="phasor-chart" height="300px"></canvas>
         </div>
+      </div>
 
-        <div class="chart-container">
-          <h2>Frequency response</h2>
-          <canvas id="response-chart"></canvas>
+      <div class="response-container">
+        <h2>Frequency response (<span id="characteristics"></span>)</h2>
+        <div>
+          <canvas id="response-chart" height="300px"></canvas>
         </div>
       </div>
     </div>

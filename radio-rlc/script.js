@@ -10,9 +10,15 @@ const capacitanceValue = document.getElementById("capacitance-value");
 const frequencySlider = document.getElementById("frequency");
 const frequencyValue = document.getElementById("frequency-value");
 
-// Plot constants
+// Frequency response graph constants (log scale)
+const freqPoints = 200;
+const freqMin = 10000000; // Hz
+const freqMax = 10000000000; // Hz
+const freqScale = Math.pow(freqMax / freqMin, 1 / (freqPoints - 1));
+
+// Sim constants
 const simFrequency = 60; // Hz
-const secondsPerPeriod = 2; // s
+const secondsPerPeriod = 10; // s
 const pointsPerPeriod = simFrequency * secondsPerPeriod;
 const periodsToShow = 2;
 const totalPoints = pointsPerPeriod * periodsToShow;
@@ -23,8 +29,8 @@ let params = {
   V0: 1.0,
   f: parseFloat(frequencySlider.value),
   R: parseFloat(resistanceSlider.value),
-  L: parseFloat(inductanceSlider.value) / 1000, // Convert mH to H
-  C: parseFloat(capacitanceSlider.value) / 1000000, // Convert µF to F
+  L: parseFloat(inductanceSlider.value) / 1000000000, // Convert nH to H
+  C: parseFloat(capacitanceSlider.value) / 1000000000000, // Convert pF to F
 };
 
 // Initialize simulation arrays
@@ -59,7 +65,9 @@ function setupCharts() {
   waveformChart = new Chart(waveformCtx, {
     type: "line",
     data: {
-      labels: inputPhaseArray,
+      labels: inputPhaseArray.map(
+        (phase) => Math.round((100 * phase) / (2 * Math.PI)) / 100
+      ),
       datasets: [
         {
           label: "Source voltage",
@@ -92,13 +100,14 @@ function setupCharts() {
       ],
     },
     options: {
+      responsive: true,
       maintainAspectRatio: false,
       animation: false,
       scales: {
         x: {
           title: {
             display: true,
-            text: "Input phase (rad)",
+            text: "Input phase (rad / 2π)",
           },
         },
         y: {
@@ -106,24 +115,10 @@ function setupCharts() {
             display: true,
             text: "Voltage (V)",
           },
-          min: -1.5,
-          max: 1.5,
+          min: -1.5 * 10000,
+          max: 1.5 * 10000,
         },
       },
-      // plugins: {
-      //   annotation: {
-      //     annotations: {
-      //       scanLine: {
-      //         type: "line",
-      //         xMin: 0,
-      //         xMax: 0,
-      //         borderColor: "rgba(0, 0, 0, 0.5)",
-      //         borderWidth: 2,
-      //         borderDash: [5, 5],
-      //       },
-      //     },
-      //   },
-      // },
     },
   });
 
@@ -136,13 +131,13 @@ function setupCharts() {
         {
           label: "Resistor impedance",
           data: [{ x: params.R, y: 0 }],
-          backgroundColor: "red",
+          backgroundColor: "blue",
           pointRadius: 8,
         },
         {
           label: "Inductor impedance",
           data: [{ x: 0, y: 2 * Math.PI * params.f * params.L }],
-          backgroundColor: "blue",
+          backgroundColor: "red",
           pointRadius: 8,
         },
         {
@@ -160,6 +155,7 @@ function setupCharts() {
       ],
     },
     options: {
+      responsive: true,
       maintainAspectRatio: false,
       scales: {
         x: {
@@ -167,7 +163,7 @@ function setupCharts() {
             display: true,
             text: "Real part (Ω)",
           },
-          min: -500,
+          min: -100,
           max: 500,
         },
         y: {
@@ -175,8 +171,8 @@ function setupCharts() {
             display: true,
             text: "Imaginary part (Ω)",
           },
-          min: -500,
-          max: 500,
+          min: -5000,
+          max: 5000,
         },
       },
     },
@@ -209,16 +205,17 @@ function setupCharts() {
       ],
     },
     options: {
+      responsive: true,
       maintainAspectRatio: false,
       scales: {
         x: {
           type: "logarithmic",
           title: {
             display: true,
-            text: "Frequency (Hz)",
+            text: "Frequency (MHz)",
           },
-          min: 1,
-          max: 1000,
+          min: freqMin / 1000000,
+          max: freqMax / 1000000,
         },
         y: {
           title: {
@@ -236,31 +233,27 @@ function setupCharts() {
 }
 
 function setupEventListeners() {
-  // Update displayed values and circuit parameters when sliders change
+  frequencySlider.addEventListener("input", () => {
+    params.f = parseFloat(frequencySlider.value);
+    frequencyValue.textContent = frequencySlider.value;
+    updatePhasorDiagram();
+    updateFrequencyResponse();
+  });
   resistanceSlider.addEventListener("input", () => {
     params.R = parseFloat(resistanceSlider.value);
     resistanceValue.textContent = resistanceSlider.value;
     updatePhasorDiagram();
     updateFrequencyResponse();
   });
-
   inductanceSlider.addEventListener("input", () => {
-    params.L = parseFloat(inductanceSlider.value) / 1000; // mH to H
+    params.L = parseFloat(inductanceSlider.value) / 1000000000; // nH to H
     inductanceValue.textContent = inductanceSlider.value;
     updatePhasorDiagram();
     updateFrequencyResponse();
   });
-
   capacitanceSlider.addEventListener("input", () => {
-    params.C = parseFloat(capacitanceSlider.value) / 1000000; // µF to F
+    params.C = parseFloat(capacitanceSlider.value) / 1000000000000; // pF to F
     capacitanceValue.textContent = capacitanceSlider.value;
-    updatePhasorDiagram();
-    updateFrequencyResponse();
-  });
-
-  frequencySlider.addEventListener("input", () => {
-    params.f = parseFloat(frequencySlider.value);
-    frequencyValue.textContent = frequencySlider.value;
     updatePhasorDiagram();
     updateFrequencyResponse();
   });
@@ -268,46 +261,21 @@ function setupEventListeners() {
 
 function updateSimulation() {
   const inputPhase = inputPhaseArray[scanPosition];
+  const { V0, R } = params;
 
-  // Use the user-defined Euler step function to update the simulation state
-  simulationState = eulerStep(inputPhase, simulationState, params);
-
-  // Calculate voltages based on simulation state
-  const vS = params.V0 * Math.sin(inputPhase);
-  const vC = simulationState.vC;
-  const vR = simulationState.iL * params.R;
+  // Run one simulation step.
+  const { iL, vC } = eulerStep(inputPhase, simulationState, params);
+  const vS = V0 * Math.sin(inputPhase);
+  const vR = iL * R;
   const vL = vS - vR - vC;
 
-  // Update the voltage arrays
+  // Update the voltage arrays (plotted by reference).
   voltageSeries.vS[scanPosition] = vS;
   voltageSeries.vR[scanPosition] = vR;
   voltageSeries.vL[scanPosition] = vL;
   voltageSeries.vC[scanPosition] = vC;
 
-  // Update the waveform chart
-  // TODO: Needed?
-  waveformChart.data.datasets[0].data = voltageSeries.vS;
-  waveformChart.data.datasets[1].data = voltageSeries.vR;
-  waveformChart.data.datasets[2].data = voltageSeries.vL;
-  waveformChart.data.datasets[3].data = voltageSeries.vC;
-
-  // Add a scan line at the current position
-  if (
-    waveformChart.options.plugins &&
-    waveformChart.options.plugins.annotation &&
-    false
-  ) {
-    waveformChart.options.plugins.annotation.annotations = {
-      scanLine: {
-        type: "line",
-        xMin: inputPhase,
-        xMax: inputPhase,
-        borderColor: "rgba(0, 0, 0, 0.5)",
-        borderWidth: 2,
-        borderDash: [5, 5],
-      },
-    };
-  }
+  // TODO: Add a scan line at the current position
 
   waveformChart.update();
 
@@ -317,10 +285,11 @@ function updateSimulation() {
 }
 
 function updatePhasorDiagram() {
-  const twoPiF = 2 * Math.PI * params.f;
-  const ZR = params.R;
-  const ZL = twoPiF * params.L;
-  const ZC = 1 / (twoPiF * params.C);
+  const { f, R, L, C } = params;
+  const omega = 2 * Math.PI * f;
+  const ZR = R;
+  const ZL = omega * L;
+  const ZC = 1 / (omega * C);
   phasorChart.data.datasets[0].data = [{ x: ZR, y: 0 }];
   phasorChart.data.datasets[1].data = [{ x: 0, y: ZL }];
   phasorChart.data.datasets[2].data = [{ x: 0, y: -ZC }];
@@ -329,34 +298,21 @@ function updatePhasorDiagram() {
 }
 
 function updateFrequencyResponse() {
-  // Generate frequency points (logarithmic scale)
-  const freqPoints = 200;
-  const freqMin = 1;
-  const freqMax = 1000;
-  const freqScale = Math.pow(freqMax / freqMin, 1 / (freqPoints - 1));
+  const { R, L, C } = params;
 
+  // Calculate frequency response curve
   const frequencies = [];
   const magnitudes = [];
   const halfPowerLine = [];
-
-  // Calculate resonant frequency
-  const resonantFreq = 1 / (2 * Math.PI * Math.sqrt(params.L * params.C));
-
-  // Calculate Q factor
-  const Q = (1 / params.R) * Math.sqrt(params.L / params.C);
-
-  // Calculate bandwidth
-  const bandwidth = resonantFreq / Q;
-
-  // Calculate frequency response curve
   for (let i = 0; i < freqPoints; i++) {
     const f = freqMin * Math.pow(freqScale, i);
     frequencies.push(f);
 
     // Calculate impedance at this frequency
-    const XL = 2 * Math.PI * f * params.L;
-    const XC = 1 / (2 * Math.PI * f * params.C);
-    const Z = Math.sqrt(params.R * params.R + (XL - XC) * (XL - XC));
+    const omega = 2 * Math.PI * f;
+    const XL = omega * L;
+    const XC = 1 / (omega * C);
+    const Z = Math.sqrt(R * R + (XL - XC) * (XL - XC));
 
     // Calculate gain (voltage across resistor / source voltage)
     magnitudes.push(params.R / Z);
@@ -365,15 +321,26 @@ function updateFrequencyResponse() {
     halfPowerLine.push(0.707);
   }
 
+  // Calculate characteristics
+  const fc = 1 / (2 * Math.PI * Math.sqrt(params.L * params.C));
+  const Q = (1 / params.R) * Math.sqrt(params.L / params.C);
+  const bw = fc / Q;
+  const halfPowerFreqLow = fc - bw / 2;
+  const halfPowerFreqHigh = fc + bw / 2;
+
+  // TODO: Show half-power bandwidth on chart
+  // TODO: Show vertical line for supply frequency
+
   // Update response chart
-  responseChart.data.labels = frequencies;
+  responseChart.data.labels = frequencies.map((f) => (f / 1000000).toFixed(0));
   responseChart.data.datasets[0].data = magnitudes;
   responseChart.data.datasets[1].data = halfPowerLine;
-
-  // Mark the bandwidth on the chart
-  const halfPowerFreqLow = resonantFreq - bandwidth / 2;
-  const halfPowerFreqHigh = resonantFreq + bandwidth / 2;
-
-  // Update chart
   responseChart.update();
+
+  // Characteristics str in title
+  const fcStr = (fc / 1000000).toFixed(0);
+  const qStr = Q.toFixed(2);
+  const bwStr = (bw / 1000000).toFixed(0);
+  const characteristicsStr = `fc = ${fcStr}MHz, Q = ${qStr}, BW = ${bwStr}MHz`;
+  document.getElementById("characteristics").textContent = characteristicsStr;
 }
