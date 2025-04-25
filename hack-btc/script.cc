@@ -96,7 +96,7 @@ public:
     // Create child HDKey with tweaked private key
     std::vector<uint8_t> child_private_key = private_key;
     if (!secp256k1_ec_seckey_tweak_add(ctx, child_private_key.data(), I_L.data())) {
-        throw std::runtime_error("Invalid child key - retry with next index");
+      throw std::runtime_error("Invalid child key - retry with next index");
     }
 
     // Then create new HDKey properly with the derived keys
@@ -154,13 +154,11 @@ std::vector<uint8_t> hmac_sha512(std::vector<uint8_t> const& key,
                                  std::vector<uint8_t> const& data) {
   std::vector<uint8_t> output(64); // SHA512 produces 64 bytes
   unsigned int length = 64;
-
   HMAC_CTX* ctx = HMAC_CTX_new();
   HMAC_Init_ex(ctx, key.data(), key.size(), EVP_sha512(), nullptr);
   HMAC_Update(ctx, data.data(), data.size());
   HMAC_Final(ctx, output.data(), &length);
   HMAC_CTX_free(ctx);
-
   return output;
 }
 
